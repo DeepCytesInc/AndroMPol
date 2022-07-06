@@ -1,14 +1,13 @@
 package com.plcoding.androidstorage
 
 import android.Manifest
-import android.content.ContentResolver
-import android.content.ContentUris
-import android.content.ContentValues
-import android.content.Context
+import android.app.RecoverableSecurityException
+import android.content.*
 import android.content.pm.PackageManager
 import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -16,6 +15,7 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
@@ -32,6 +32,7 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding : ActivityMainBinding
+
     private lateinit var internalStoragePhotoAdapter: InternalStoragePhotoAdapter
     private lateinit var externalStoragePhotoAdapter: SharedPhotoAdapter
 
@@ -39,14 +40,17 @@ class MainActivity : AppCompatActivity() {
     private var writePermission = false
     private var cameraPermission = false
     private lateinit var permissionLauncher : ActivityResultLauncher<Array<String>>
+    private lateinit var intentLauncher : ActivityResultLauncher<IntentSenderRequest>
     private lateinit var contentObserver : ContentObserver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         internalStoragePhotoAdapter = InternalStoragePhotoAdapter{
-            lifecycleScope.launch { val isDeleted = deletePhotofromInternalStorage(it.name)
+            lifecycleScope.launch {
+                val isDeleted = deletePhotofromInternalStorage(it.name)
                 if (isDeleted) {
                     loadPhotostoRecyclerView()
                     Toast.makeText(this@MainActivity, "Photo Deleted", Toast.LENGTH_SHORT)
@@ -57,7 +61,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         externalStoragePhotoAdapter = SharedPhotoAdapter{
-
+            lifecycleScope.launch {
+                deletePhotofromExternalStorage(it.contentUri)
+            }
         }
 
         setupExternalRecyclerView()
@@ -80,12 +86,23 @@ class MainActivity : AppCompatActivity() {
         }
         requestPermission()
 
+//        ------intent-Launcher---------
+
+        intentLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()){
+            if(it.resultCode == RESULT_OK){
+                Toast.makeText(this, "Photo Deleted", Toast.LENGTH_SHORT).show()
+            }
+            else{
+                Toast.makeText(this, "Deletion Failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+
 
 //---------------Click-Picture-Button-------------------
         val takePhoto = registerForActivityResult(ActivityResultContracts.TakePicturePreview()){
-            val isPrivate = binding.switchPrivate.isChecked
-            lifecycleScope.launch(){
-                    val isSaveSuccess = when{
+            lifecycleScope.launch{
+                val isPrivate = binding.switchPrivate.isChecked
+                val isSaveSuccess = when{
                         isPrivate -> savePhotoToInternalStorage(UUID.randomUUID().toString(), it)
                         writePermission -> savePhotoToExternalStorage(UUID.randomUUID().toString(), it)
                         else -> false
@@ -112,6 +129,7 @@ class MainActivity : AppCompatActivity() {
 
         setupRecyclerView()
         loadPhotostoRecyclerView()
+        loadPhotosFromExternalToRecyclerView()
     }
 
 
@@ -171,6 +189,8 @@ class MainActivity : AppCompatActivity() {
             }?: listOf()
         }
     }
+
+//    ---------Requesting-Permissions----------
 
     private fun requestPermission(){
         val hasReadPermission = ContextCompat.checkSelfPermission(
@@ -279,20 +299,21 @@ class MainActivity : AppCompatActivity() {
 
     // ----------Internal Storage----------
 
-    private fun savePhotoToInternalStorage(filename: String, bmp: Bitmap): Boolean {
-        return try{
-            openFileOutput("$filename.jpg", MODE_PRIVATE).use { stream->
-                if(!bmp.compress(Bitmap.CompressFormat.JPEG, 93, stream)){
-                    throw IOException("Error saving bitmap")
+    private suspend fun savePhotoToInternalStorage(filename: String, bmp: Bitmap): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                openFileOutput("$filename.jpg", MODE_PRIVATE).use { stream ->
+                    if (!bmp.compress(Bitmap.CompressFormat.JPEG, 93, stream)) {
+                        throw IOException("Error saving bitmap")
+                    }
                 }
+                true
+            } catch (e: IOException) {
+                e.printStackTrace()
+                false
             }
-            true
-        }catch (e: IOException){
-            e.printStackTrace()
-            false
         }
     }
-
 
     private suspend fun deletePhotofromInternalStorage(filename: String): Boolean {
         return withContext(Dispatchers.IO) {
@@ -304,6 +325,33 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private suspend fun deletePhotofromExternalStorage(photoUri: Uri){
+        withContext(Dispatchers.IO){
+            try {
+                contentResolver.delete(photoUri,null,null)
+            } catch (e: SecurityException) {
+                val intentSender = when {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                        MediaStore.createDeleteRequest(contentResolver, listOf(photoUri)).intentSender
+                    }
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                        val recoverableException = e as? RecoverableSecurityException
+                        recoverableException?.userAction?.actionIntent?.intentSender
+                    }
+                    else -> {
+                        null
+                    }
+                }
+                intentSender?.let { sender ->
+                    intentLauncher.launch(
+                        IntentSenderRequest.Builder(sender).build()
+                    )
+                }
+            }
+        }
+    }
+
 
 //    ------------Destroy Function------------
     override fun onDestroy() {
