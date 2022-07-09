@@ -12,11 +12,10 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.Toast
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
 import androidx.core.content.ContextCompat
@@ -90,10 +89,10 @@ class MainActivity : AppCompatActivity() {
 
         intentLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()){
             if(it.resultCode == RESULT_OK){
-                Toast.makeText(this, "Photo Deleted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Photo Deleted", Toast.LENGTH_SHORT).show()
             }
             else{
-                Toast.makeText(this, "Deletion Failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Deletion Failed", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -119,17 +118,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnTakePhoto.setOnClickListener{
-            if(cameraPermission) {
-                takePhoto.launch()
-            }
-            else {
-                Toast.makeText(this, "Camera Permission Denied", Toast.LENGTH_SHORT).show()
-            }
+//            if(cameraPermission) {
+//                takePhoto.launch()
+//            }
+//            else {
+//                Toast.makeText(this, "Camera Permission Denied", Toast.LENGTH_SHORT).show()
+//            }
+            takePhoto.launch()
         }
 
         setupRecyclerView()
         loadPhotostoRecyclerView()
         loadPhotosFromExternalToRecyclerView()
+        Thread.dumpStack()
+
     }
 
 
@@ -143,7 +145,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        contentResolver.registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, true, contentObserver)
+        contentResolver.registerContentObserver(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            true,
+            contentObserver)
     }
 
 
@@ -271,15 +276,12 @@ class MainActivity : AppCompatActivity() {
             val imageCollection = sdk29AndUp {
                 MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             }?: MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-
-// ----------STORE METADATA----------
             val contentValues = ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, "$displayName.jpg")
                 put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
                 put(MediaStore.Images.Media.WIDTH, bmp.width)
                 put(MediaStore.Images.Media.HEIGHT, bmp.height)
             }
-
             try{
                 contentResolver.insert(imageCollection, contentValues)?.also { uri->
                     contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -291,6 +293,8 @@ class MainActivity : AppCompatActivity() {
                 true
             }catch (e: Exception){
                 e.printStackTrace()
+//                Thread.dumpStack()
+                Log.e("Error", e.printStackTrace().toString())
                 false
             }
         }
@@ -306,10 +310,13 @@ class MainActivity : AppCompatActivity() {
                     if (!bmp.compress(Bitmap.CompressFormat.JPEG, 93, stream)) {
                         throw IOException("Error saving bitmap")
                     }
-                }
                 true
-            } catch (e: IOException) {
+                }
+            }
+            catch (e: IOException) {
                 e.printStackTrace()
+                Thread.dumpStack()
+                Log.e("Error", e.printStackTrace().toString())
                 false
             }
         }
@@ -321,6 +328,8 @@ class MainActivity : AppCompatActivity() {
                 deleteFile(filename)
             } catch (e: Exception) {
                 e.printStackTrace()
+                Thread.dumpStack()
+                Log.e("Error", e.printStackTrace().toString())
                 false
             }
         }
