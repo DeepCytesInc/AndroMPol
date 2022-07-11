@@ -2,14 +2,15 @@ package com.plcoding.androidstorage
 
 import android.Manifest
 import android.app.RecoverableSecurityException
-import android.content.*
+import android.content.ContentResolver
+import android.content.ContentUris
+import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
@@ -18,6 +19,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -27,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -155,6 +159,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
+
     private suspend fun loadPhotosFromExternalStorage(): List<SharedStoragePhoto> {
         return withContext(Dispatchers.IO){
 
@@ -167,16 +172,23 @@ class MainActivity : AppCompatActivity() {
                 MediaStore.Images.Media.DISPLAY_NAME,
                 MediaStore.Images.Media.WIDTH,
                 MediaStore.Images.Media.HEIGHT,
+                MediaStore.Images.Media.DATE_ADDED
             )
 
             val photos = mutableListOf<SharedStoragePhoto>()
 
+            // Request 20 records starting at row index 30.
+            // Request 20 records starting at row index 30.
+            //    "${MediaStore.Images.Media.DATE_ADDED} DESC"
+            val queryArgs = Bundle()
+            queryArgs.putInt(ContentResolver.QUERY_ARG_LIMIT, 5)
+            queryArgs.putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, "${MediaStore.Images.Media.DATE_ADDED} DESC")
+
             contentResolver.query(
                 collection,
                 projection,
+                queryArgs,
                 null,
-                null,
-                "${MediaStore.Images.Media.DATE_ADDED} DESC"
             )?.use {  cursor ->
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
                 val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
