@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "47737966322",
+    "project_id": "permissionsapp-e18dd",
+    "storage_bucket": "permissionsapp-e18dd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:47737966322:android:42cbf621e5e1b85bc74a6b",
+        "android_client_info": {
+          "package_name": "com.plcoding.androidstorage"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "47737966322-bdn3q0f6fm4b2tkfg35rnb6vvq9933nm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQdS8v974msE_vAEJPqpNP-9pX5WKrq5w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "47737966322-bdn3q0f6fm4b2tkfg35rnb6vvq9933nm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

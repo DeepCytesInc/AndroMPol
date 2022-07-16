@@ -3,7 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Android/SampleProject/AndroidStorage/app/src/main/res/drawable/ic_launcher_background.xml" value="0.2395" />
+        <entry key="..\:/Android/SampleProject/AndroidStorage/app/src/main/res/layout/activity_camera.xml" value="0.1" />
         <entry key="..\:/Android/SampleProject/AndroidStorage/app/src/main/res/layout/activity_main.xml" value="0.2765273311897106" />
+        <entry key="..\:/Android/SampleProject/AndroidStorage/app/src/main/res/layout/activity_read_external_storage.xml" value="0.1578125" />
         <entry key="..\:/Android/SampleProject/AndroidStorage/app/src/main/res/layout/item_photo.xml" value="0.18297101449275363" />
         <entry key="..\:/Android/SampleProject/AndroidStorage/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.2015" />
       </map>
