@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.widget.Button
 import android.widget.Toast
+import com.plcoding.androidstorage.FirebaseUpload
 import com.plcoding.androidstorage.databinding.ActivityReadExternalStorageBinding
 
 class ReadExternalStorage : AppCompatActivity() {
@@ -29,7 +30,9 @@ class ReadExternalStorage : AppCompatActivity() {
     private fun init() {
         nTakePhoto = registerForActivityResult(
             GetContent()
-        ) { result -> binding!!.firebaseimage.setImageURI(result) }
+        ) { result -> binding!!.firebaseimage.setImageURI(result)
+            FirebaseUpload.uploadPicture(result)
+        }
         binding!!.selectImagebtn.setOnClickListener {
             if (ContextCompat.checkSelfPermission(
                     this@ReadExternalStorage,

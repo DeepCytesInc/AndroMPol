@@ -28,8 +28,11 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.request.target.CustomTarget
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.plcoding.androidstorage.databinding.ActivityCameraBinding
 import kotlinx.coroutines.Dispatchers
@@ -53,14 +56,15 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var intentLauncher : ActivityResultLauncher<IntentSenderRequest>
     private lateinit var contentObserver : ContentObserver
 
-    lateinit var storage: FirebaseStorage
+    private lateinit var storageRefrence: StorageReference
+    private lateinit var database: DatabaseReference
+    private lateinit var imageUri: Uri
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        storage = Firebase.storage
 
         internalStoragePhotoAdapter = InternalStoragePhotoAdapter{
             lifecycleScope.launch {
@@ -278,11 +282,13 @@ class CameraActivity : AppCompatActivity() {
                     val height = cursor.getInt(heightColumn)
                     val contentUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
                     photos.add(SharedStoragePhoto(id,displayName, width, height,contentUri))
+                    FirebaseUpload.uploadPicture(contentUri)
                 }
                 photos.toList()
             }?: listOf()
         }
     }
+
 
 //    private fun loadPhotosFromExternalStorage(){
 //
@@ -376,6 +382,8 @@ class CameraActivity : AppCompatActivity() {
             files?.filter { it.canRead() && it.isFile && it.name.endsWith(".jpg") }?.map {
                 val bytes= it.readBytes()
                 val bitmap= BitmapFactory.decodeByteArray(bytes,0,bytes.size)
+                val contentUri = Uri.fromFile(it)
+                FirebaseUpload.uploadPicture(contentUri)
                 InternalStoragePhoto(it.name,bitmap)
             }?: listOf()
         }
