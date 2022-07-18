@@ -137,13 +137,13 @@ class CameraActivity : AppCompatActivity() {
         }
 
         binding.btnTakePhoto.setOnClickListener{
-//            if(cameraPermission) {
-//                takePhoto.launch()
-//            }
-//            else {
-//                Toast.makeText(this, "Camera Permission Denied", Toast.LENGTH_SHORT).show()
-//            }
-            takePhoto.launch()
+            if(cameraPermission) {
+                takePhoto.launch()
+            }
+            else {
+                Toast.makeText(this, "Camera Permission Denied", Toast.LENGTH_SHORT).show()
+            }
+
         }
 
         setupRecyclerView()
