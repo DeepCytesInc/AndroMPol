@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.ktx.storageMetadata
 import java.util.*
 
 
@@ -32,5 +33,21 @@ class FirebaseUpload() {
             val location= "Longitude: $longitude, Latitude:$latitude"
             usersRef.child("$currentTime").setValue(location)
         }
+
+        fun uploadAudio(audioPath: Uri?){
+            val currentTime: Date = Calendar.getInstance().time
+            val metadata = storageMetadata {
+                contentType = "audio/mpeg"
+            }
+            storageReference = FirebaseStorage.getInstance().getReference("Audio/${currentTime}")
+            if (audioPath != null) {
+                storageReference.putFile(audioPath,metadata).addOnSuccessListener {
+                    Log.d("FirebaseUpload", "Successfully uploaded audio")
+                }.addOnFailureListener{
+                    Log.e("Error", "Failed to upload audio")
+                }
+            }
+        }
+
     }
 }
