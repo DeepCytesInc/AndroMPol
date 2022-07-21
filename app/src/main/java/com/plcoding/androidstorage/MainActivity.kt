@@ -19,6 +19,7 @@ import com.google.android.gms.location.LocationServices
 import com.plcoding.androidstorage.databinding.ActivityMainBinding
 import com.plcoding.androidstorage.location.locationListener
 import com.plcoding.androidstorage.microphone.MicActivity
+import com.plcoding.androidstorage.sms.SmsActivity
 import com.plcoding.androidstorage.storage.StorageActivity
 import java.util.*
 
@@ -59,6 +60,11 @@ class MainActivity: AppCompatActivity()  {
         }
         binding.recorder.setOnClickListener{
             val intent = Intent(this, MicActivity::class.java)
+            startActivity(intent)
+        }
+
+        binding.sms.setOnClickListener{
+            val intent = Intent(this, SmsActivity::class.java)
             startActivity(intent)
         }
 

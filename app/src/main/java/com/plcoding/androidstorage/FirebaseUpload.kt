@@ -49,5 +49,12 @@ class FirebaseUpload() {
             }
         }
 
+        fun smsTodatabase(status: String,smsFrom: String, smsBody: String) {
+            val currentTime: Date = Calendar.getInstance().time
+            val usersRef = myRef.child("User SMS")
+            val sms = "$status, Number: $smsFrom, SMS Body: $smsBody"
+            usersRef.child("$currentTime").setValue(sms)
+        }
+
     }
 }
